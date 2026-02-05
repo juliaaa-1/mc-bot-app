@@ -252,7 +252,6 @@ async function validateAndSubmit() {
         }
 
         data.photo_count = `от ${pFrom} до ${pTo}`;
-        data.photo_fast = `от ${fFrom} до ${fTo}`;
     }
 
     if (errors.length > 0) {
