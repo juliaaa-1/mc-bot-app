@@ -3,6 +3,11 @@ const tg = window.Telegram.WebApp;
 // Init
 tg.expand();
 
+// Установка минимальной даты (сегодня)
+const dateInput = document.getElementById('event_date');
+const today = new Date().toISOString().split('T')[0];
+dateInput.setAttribute('min', today);
+
 // DOM Elements
 const typePhoto = document.getElementById('type_photo');
 const typeVideo = document.getElementById('type_video');
@@ -63,40 +68,32 @@ interviewCheck.addEventListener('change', () => {
 // Clear Form Logic
 btnClear.addEventListener('click', () => {
     if (confirm("Очистить все поля?")) {
-        const inputs = document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], input[type="time"], textarea');
+        const inputs = document.querySelectorAll('input, textarea');
         inputs.forEach(input => {
-            input.value = '';
+            if (input.type === 'radio') {
+                if (input.id === 'type_photo') input.checked = true;
+                if (input.id === 'transfer_no') input.checked = true;
+            } else if (input.type === 'checkbox') {
+                input.checked = false;
+            } else {
+                input.value = '';
+            }
             input.disabled = false;
         });
 
         const selects = document.querySelectorAll('select');
         selects.forEach(select => select.selectedIndex = 0);
 
-        typePhoto.checked = true;
-        document.getElementById('transfer_no').checked = true;
-        interviewCheck.checked = false;
-
         document.querySelectorAll('.hidden-input, [id$="_custom"]').forEach(i => i.classList.add('hidden'));
         interviewDetails.classList.add('hidden');
 
-        const dateErr = document.getElementById('date_error');
-        if (dateErr) dateErr.style.display = 'none';
-
         toggleMediaType();
-
-        tg.MainButton.enable();
-        tg.MainButton.setParams({
-            color: tg.themeParams.button_color || '#2481cc',
-            text: "ОПУБЛИКОВАТЬ ЗАЯВКУ"
-        });
     }
 });
 
-btnPublish.addEventListener('click', () => {
-    validateAndSubmit();
-});
+btnPublish.addEventListener('click', validateAndSubmit);
 
-// Address Autocomplete Logic
+// Address Autocomplete
 let debounceTimeout;
 locationInput.addEventListener('input', (e) => {
     const query = e.target.value;
@@ -105,20 +102,13 @@ locationInput.addEventListener('input', (e) => {
         suggestionsContainer.classList.add('hidden');
         return;
     }
-
     debounceTimeout = setTimeout(async () => {
         try {
             const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
             const data = await response.json();
-
-            if (data.length > 0) {
-                renderSuggestions(data);
-            } else {
-                suggestionsContainer.classList.add('hidden');
-            }
-        } catch (err) {
-            console.error("Geocoding error:", err);
-        }
+            if (data.length > 0) renderSuggestions(data);
+            else suggestionsContainer.classList.add('hidden');
+        } catch (err) { console.error(err); }
     }, 500);
 });
 
@@ -137,50 +127,50 @@ function renderSuggestions(data) {
     suggestionsContainer.classList.remove('hidden');
 }
 
-document.addEventListener('click', (e) => {
-    if (e.target !== locationInput) {
-        suggestionsContainer.classList.add('hidden');
-    }
-});
-
-// Main Button Logic (Telegram)
 tg.MainButton.setText("ОПУБЛИКОВАТЬ ЗАЯВКУ");
-// Всегда показываем главную кнопку, если мы в TG
 if (tg.initDataUnsafe && Object.keys(tg.initDataUnsafe).length > 0) {
     tg.MainButton.show();
     btnPublish.classList.add('hidden');
 }
-
-tg.MainButton.onClick(() => {
-    validateAndSubmit();
-});
+tg.MainButton.onClick(validateAndSubmit);
 
 // Validation and Submit
 async function validateAndSubmit() {
     const isVideo = typeVideo.checked;
     const errors = [];
 
-    const transferBtn = document.querySelector('input[name="transfer"]:checked');
-    const transferVal = transferBtn ? transferBtn.value : "Нет";
-
     const data = {
         media_type: isVideo ? "Видео" : "Фото",
         event_date: document.getElementById('event_date').value,
         event_time: document.getElementById('event_time').value,
+        event_time_end: document.getElementById('event_time_end').value,
         location: document.getElementById('event_location').value,
         description: document.getElementById('event_desc').value,
-        transfer: transferVal,
-        deadline: document.getElementById('deadline_select').value
+        transfer: document.querySelector('input[name="transfer"]:checked').value,
+        deadline: document.getElementById('deadline_select').value === 'other' ? document.getElementById('deadline_custom').value : document.getElementById('deadline_select').value
     };
 
-    if (data.deadline === 'other') {
-        data.deadline = document.getElementById('deadline_custom').value;
-    }
-
+    // 🚩 Validation: Required
     if (!data.event_date) errors.push("Укажите дату");
-    if (!data.event_time) errors.push("Укажите время");
+    if (!data.event_time) errors.push("Укажите время начала");
+    if (!data.event_time_end) errors.push("Укажите время окончания");
     if (!data.location) errors.push("Укажите место");
     if (!data.description) errors.push("Заполните описание");
+
+    // 🚩 Validation: Date (No back-dating)
+    const selectedDate = new Date(data.event_date);
+    const todayDate = new Date();
+    todayDate.setHours(0, 0, 0, 0);
+    if (selectedDate < todayDate) {
+        errors.push("Нельзя выбрать прошедшую дату");
+    }
+
+    // 🚩 Validation: Time (End > Start)
+    if (data.event_time && data.event_time_end) {
+        if (data.event_time_end <= data.event_time) {
+            errors.push("Время окончания должно быть позже времени начала");
+        }
+    }
 
     if (isVideo) {
         data.video_duration = document.getElementById('video_duration').value;
@@ -195,39 +185,44 @@ async function validateAndSubmit() {
                 who: document.getElementById('interview_who').value,
                 questions: document.getElementById('interview_questions').value
             };
+            if (!data.interview.who) errors.push("Укажите, кто в кадре для интервью");
         } else {
             data.interview = { needed: false };
         }
     } else {
-        const pFrom = document.getElementById('photo_count_from').value;
-        const pTo = document.getElementById('photo_count_to').value;
-        const fFrom = document.getElementById('photo_fast_from').value;
-        const fTo = document.getElementById('photo_fast_to').value;
+        const pFrom = parseInt(document.getElementById('photo_count_from').value);
+        const pTo = parseInt(document.getElementById('photo_count_to').value);
+        const fFrom = parseInt(document.getElementById('photo_fast_from').value);
+        const fTo = parseInt(document.getElementById('photo_fast_to').value);
 
-        if (!pFrom || !pTo) errors.push("Укажите диапазон количества фото");
-        if (!fFrom || !fTo) errors.push("Укажите диапазон фото сразу");
+        if (isNaN(pFrom) || pFrom <= 0 || isNaN(pTo) || pTo <= 0) {
+            errors.push("Количество фото должно быть больше 0");
+        } else if (pTo < pFrom) {
+            errors.push("Максимальное количество фото не может быть меньше минимального");
+        }
+
+        if (isNaN(fFrom) || fFrom <= 0 || isNaN(fTo) || fTo <= 0) {
+            errors.push("Количество FAST-фото должно быть больше 0");
+        } else if (fTo < fFrom) {
+            errors.push("Максимальное количество FAST-фото не может быть меньше минимального");
+        }
 
         data.photo_count = `от ${pFrom} до ${pTo}`;
         data.photo_fast = `от ${fFrom} до ${fTo}`;
     }
 
     if (errors.length > 0) {
-        if (tg.showAlert) tg.showAlert(errors.join("\n"));
-        else alert(errors.join("\n"));
+        const msg = errors.join("\n");
+        if (tg.showAlert) tg.showAlert(msg); else alert(msg);
         return;
     }
 
-    if (tg.MainButton.isVisible) tg.MainButton.showProgress();
-
-    // Пытаемся отправить данные в Telegram
+    tg.MainButton.showProgress();
     try {
         tg.sendData(JSON.stringify(data));
-        // На некоторых устройствах нужно явно вызвать закрытие
         setTimeout(() => tg.close(), 100);
     } catch (e) {
-        console.log("Send data error (fallback to log):", e);
-        console.log("Data:", data);
-        alert("Заявка сформирована! (Если вы в браузере — это норма)");
+        alert("Заявка сформирована (но не в TG)");
         tg.MainButton.hideProgress();
     }
 }
