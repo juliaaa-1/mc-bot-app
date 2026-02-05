@@ -19,6 +19,8 @@ const interviewDetails = document.getElementById('interview_details');
 const setupCustomInput = (selectId, inputId) => {
     const select = document.getElementById(selectId);
     const input = document.getElementById(inputId);
+    if (!select || !input) return;
+
     select.addEventListener('change', () => {
         if (select.value === 'other') {
             input.classList.remove('hidden');
@@ -30,7 +32,6 @@ const setupCustomInput = (selectId, inputId) => {
 };
 
 setupCustomInput('video_mood', 'video_mood_custom');
-setupCustomInput('video_logos', 'video_logos_custom');
 setupCustomInput('deadline_select', 'deadline_custom');
 
 // Media Type Toggling
@@ -62,22 +63,38 @@ interviewCheck.addEventListener('change', () => {
 // Clear Form Logic
 btnClear.addEventListener('click', () => {
     if (confirm("Очистить все поля?")) {
-        const inputs = document.querySelectorAll('input, textarea');
+        // Reset all text and number inputs
+        const inputs = document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], input[type="time"], textarea');
         inputs.forEach(input => {
-            if (input.type === 'radio') {
-                if (input.id === 'type_photo') input.checked = true;
-            } else if (input.type === 'checkbox') {
-                input.checked = false;
-            } else {
-                input.value = '';
-            }
+            input.value = '';
+            input.disabled = false; // Just in case
         });
+
+        // Reset selects
         const selects = document.querySelectorAll('select');
         selects.forEach(select => select.selectedIndex = 0);
 
-        document.querySelectorAll('input[id$="_custom"]').forEach(i => i.classList.add('hidden'));
+        // Reset radio buttons
+        typePhoto.checked = true;
+        document.getElementById('transfer_no').checked = true;
+
+        // Reset checkbox
+        interviewCheck.checked = false;
+
+        // Hide dynamic elements
+        document.querySelectorAll('.hidden-input, [id$="_custom"]').forEach(i => i.classList.add('hidden'));
         interviewDetails.classList.add('hidden');
+        document.getElementById('date_error').style.display = 'none';
+
+        // Sync media type visibility
         toggleMediaType();
+
+        // Reset MainButton
+        tg.MainButton.enable();
+        tg.MainButton.setParams({
+            color: tg.themeParams.button_color || '#2481cc',
+            text: "ОПУБЛИКОВАТЬ ЗАЯВКУ"
+        });
     }
 });
 
@@ -177,13 +194,16 @@ tg.MainButton.onClick(() => {
 async function validateAndSubmit() {
     const isVideo = typeVideo.checked;
     const errors = [];
+
+    const transferVal = document.querySelector('input[name="transfer"]:checked').value;
+
     const data = {
         media_type: isVideo ? "Видео" : "Фото",
         event_date: document.getElementById('event_date').value,
         event_time: document.getElementById('event_time').value,
         location: document.getElementById('event_location').value,
         description: document.getElementById('event_desc').value,
-        transfer: document.getElementById('transfer_needed').checked ? "Да" : "Нет",
+        transfer: transferVal,
         deadline: document.getElementById('deadline_select').value
     };
 
@@ -201,7 +221,7 @@ async function validateAndSubmit() {
         data.video_format = document.getElementById('video_format').value;
         data.video_mood = document.getElementById('video_mood').value === 'other' ? document.getElementById('video_mood_custom').value : document.getElementById('video_mood').value;
         data.video_pace = document.getElementById('video_pace').value;
-        data.video_logos = document.getElementById('video_logos').value === 'other' ? document.getElementById('video_logos_custom').value : document.getElementById('video_logos').value;
+        data.video_logos = document.getElementById('video_logos').value; // Simple text now
 
         if (interviewCheck.checked) {
             data.interview = {
@@ -213,9 +233,16 @@ async function validateAndSubmit() {
             data.interview = { needed: false };
         }
     } else {
-        data.photo_count = document.getElementById('photo_count').value;
-        data.photo_fast = document.getElementById('photo_fast').value;
-        if (!data.photo_count) errors.push("Укажите количество фото");
+        const pFrom = document.getElementById('photo_count_from').value;
+        const pTo = document.getElementById('photo_count_to').value;
+        const fFrom = document.getElementById('photo_fast_from').value;
+        const fTo = document.getElementById('photo_fast_to').value;
+
+        if (!pFrom || !pTo) errors.push("Укажите диапазон количества фото");
+        if (!fFrom || !fTo) errors.push("Укажите диапазон фото сразу");
+
+        data.photo_count = `от ${pFrom} до ${pTo}`;
+        data.photo_fast = `от ${fFrom} до ${fTo}`;
     }
 
     if (errors.length > 0) {
@@ -226,6 +253,7 @@ async function validateAndSubmit() {
 
     if (tg.MainButton.isVisible) tg.MainButton.showProgress();
 
+    // Check if in TG
     if (!tg.initDataUnsafe || !tg.initDataUnsafe.query_id) {
         console.log("Submit data:", data);
         alert("Заявка сформирована (в консоли)! Для отправки боту используйте Telegram.");
