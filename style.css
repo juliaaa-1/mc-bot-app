@@ -246,8 +246,8 @@ input:checked+.slider:before {
 .button-group {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    margin-top: 20px;
+    gap: 8px;
+    margin-top: 10px;
 }
 
 button {
@@ -275,5 +275,30 @@ button:active {
     color: var(--button-color);
     border: 1px solid var(--button-color);
     font-size: 14px;
-    padding: 10px;
+    padding: 8px;
+}
+
+.range-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.range-group input {
+    margin-bottom: 0 !important;
+}
+
+.range-divider {
+    color: var(--hint-color);
+    font-weight: bold;
+}
+
+.hint-text {
+    display: block;
+    font-size: 12px;
+    color: var(--hint-color);
+    margin-top: -4px;
+    margin-bottom: 12px;
+    font-style: italic;
 }
