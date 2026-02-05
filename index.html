@@ -31,10 +31,18 @@
             <h2>📸 ТЗ для фотографа</h2>
 
             <label>Общее количество фото <span class="required-mark">*</span></label>
-            <input type="number" id="photo_count" placeholder="Например: 50">
+            <div class="range-group">
+                <input type="number" id="photo_count_from" placeholder="От" min="1">
+                <span class="range-divider">—</span>
+                <input type="number" id="photo_count_to" placeholder="До" min="1">
+            </div>
 
-            <label>Сколько нужно СРАЗУ (fast)?</label>
-            <input type="number" id="photo_fast" placeholder="Например: 10">
+            <label style="margin-top: 10px;">Сколько нужно СРАЗУ (fast)? <span class="required-mark">*</span></label>
+            <div class="range-group">
+                <input type="number" id="photo_fast_from" placeholder="От" min="1">
+                <span class="range-divider">—</span>
+                <input type="number" id="photo_fast_to" placeholder="До" min="1">
+            </div>
         </div>
 
         <!-- Поля для Видео (скрыты) -->
@@ -59,8 +67,7 @@
                 </label>
             </div>
 
-            <div id="interview_details" class="hidden"
-                style="margin-left: 10px; border-left: 2px solid var(--hint-color); padding-left: 10px;">
+            <div id="interview_details" class="hidden" style="margin-top: 10px;">
                 <label>Кто в кадре?</label>
                 <input type="text" id="interview_who" placeholder="Имена, должности">
 
@@ -85,13 +92,9 @@
                 <option value="Медленный">Медленный</option>
             </select>
 
-            <label>Логотипы</label>
-            <select id="video_logos">
-                <option value="Только АПДМ">Только АПДМ</option>
-                <option value="АПДМ + Нацпроекты">АПДМ + Нацпроекты</option>
-                <option value="other">Другие...</option>
-            </select>
-            <input type="text" id="video_logos_custom" class="hidden" placeholder="Перечислите логотипы">
+            <label>Логотипы:</label>
+            <span class="hint-text">Написать при наличии, например АПДМ</span>
+            <input type="text" id="video_logos" placeholder="Введите логотипы...">
         </div>
 
         <!-- Общие данные -->
@@ -100,26 +103,29 @@
 
             <label>Дата проведения <span class="required-mark">*</span></label>
             <input type="date" id="event_date">
-            <div id="date_error" class="error-msg">Этa дата занята или некорректна</div>
+            <div id="date_error" class="error-msg">Эта дата занята или некорректна</div>
 
             <label>Время начала <span class="required-mark">*</span></label>
             <input type="time" id="event_time">
             <div id="time_error" class="error-msg">Это время занято</div>
 
             <label>Место проведения <span class="required-mark">*</span></label>
-            <!-- Простой инпут с автокомплитом -->
             <div style="position: relative;">
                 <input type="text" id="event_location" placeholder="Начните вводить адрес (например, Троицкий 118)..."
                     autocomplete="off">
                 <div id="address_suggestions" class="address-suggestions hidden"></div>
             </div>
 
-            <div class="toggle-wrapper">
-                <span class="toggle-label">Нужен трансфер?</span>
-                <label class="switch">
-                    <input type="checkbox" id="transfer_needed">
-                    <span class="slider"></span>
-                </label>
+            <label style="margin-top: 15px;">Есть ли трансфер?</label>
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input type="radio" name="transfer" id="transfer_yes" value="Да">
+                    <label for="transfer_yes">✅ Да</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" name="transfer" id="transfer_no" value="Нет" checked>
+                    <label for="transfer_no">❌ Нет</label>
+                </div>
             </div>
 
             <label>Краткое описание мероприятия <span class="required-mark">*</span></label>
@@ -135,9 +141,9 @@
             <input type="text" id="deadline_custom" class="hidden" placeholder="Укажите срок">
         </div>
 
-        <!-- Кнопки (видны в браузере, в ТГ будут дублировать MainButton или можно скрыть) -->
+        <!-- Кнопки -->
         <div class="button-group">
-            <button id="btn_publish" class="main-button">Опубликовать заявку</button>
+            <button id="btn_publish" class="main-button">ОПУБЛИКОВАТЬ ЗАЯВКУ</button>
             <button id="btn_clear" class="secondary-button">Очистить поля</button>
         </div>
 
