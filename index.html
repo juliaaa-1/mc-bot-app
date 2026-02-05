@@ -103,11 +103,17 @@
 
             <label>Дата проведения <span class="required-mark">*</span></label>
             <input type="date" id="event_date">
-            <div id="date_error" class="error-msg">Эта дата занята или некорректна</div>
 
-            <label>Время начала <span class="required-mark">*</span></label>
-            <input type="time" id="event_time">
-            <div id="time_error" class="error-msg">Это время занято</div>
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label>Начало <span class="required-mark">*</span></label>
+                    <input type="time" id="event_time">
+                </div>
+                <div style="flex: 1;">
+                    <label>Окончание <span class="required-mark">*</span></label>
+                    <input type="time" id="event_time_end">
+                </div>
+            </div>
 
             <label>Место проведения <span class="required-mark">*</span></label>
             <div style="position: relative;">
