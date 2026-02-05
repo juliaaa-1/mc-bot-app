@@ -192,8 +192,8 @@ async function validateAndSubmit() {
     } else {
         const pFrom = parseInt(document.getElementById('photo_count_from').value);
         const pTo = parseInt(document.getElementById('photo_count_to').value);
-        const fFrom = parseInt(document.getElementById('photo_fast_from').value);
-        const fTo = parseInt(document.getElementById('photo_fast_to').value);
+        const fFromVal = document.getElementById('photo_fast_from').value;
+        const fToVal = document.getElementById('photo_fast_to').value;
 
         if (isNaN(pFrom) || pFrom <= 0 || isNaN(pTo) || pTo <= 0) {
             errors.push("Количество фото должно быть больше 0");
@@ -201,10 +201,17 @@ async function validateAndSubmit() {
             errors.push("Максимальное количество фото не может быть меньше минимального");
         }
 
-        if (isNaN(fFrom) || fFrom <= 0 || isNaN(fTo) || fTo <= 0) {
-            errors.push("Количество FAST-фото должно быть больше 0");
-        } else if (fTo < fFrom) {
-            errors.push("Максимальное количество FAST-фото не может быть меньше минимального");
+        if (fFromVal || fToVal) {
+            const fFrom = parseInt(fFromVal);
+            const fTo = parseInt(fToVal);
+            if (isNaN(fFrom) || fFrom <= 0 || isNaN(fTo) || fTo <= 0) {
+                errors.push("Количество фото 'Сразу' должно быть больше 0");
+            } else if (fTo < fFrom) {
+                errors.push("Максимальное количество фото 'Сразу' не может быть меньше минимального");
+            }
+            data.photo_fast = `от ${fFrom} до ${fTo}`;
+        } else {
+            data.photo_fast = "не требуется";
         }
 
         data.photo_count = `от ${pFrom} до ${pTo}`;
