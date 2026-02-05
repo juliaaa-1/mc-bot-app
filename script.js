@@ -67,7 +67,7 @@ btnClear.addEventListener('click', () => {
         const inputs = document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], input[type="time"], textarea');
         inputs.forEach(input => {
             input.value = '';
-            input.disabled = false; // Just in case
+            input.disabled = false;
         });
 
         // Reset selects
@@ -84,7 +84,9 @@ btnClear.addEventListener('click', () => {
         // Hide dynamic elements
         document.querySelectorAll('.hidden-input, [id$="_custom"]').forEach(i => i.classList.add('hidden'));
         interviewDetails.classList.add('hidden');
-        document.getElementById('date_error').style.display = 'none';
+
+        const dateErr = document.getElementById('date_error');
+        if (dateErr) dateErr.style.display = 'none';
 
         // Sync media type visibility
         toggleMediaType();
@@ -149,36 +151,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Check Availability on server
-const checkDateTime = async () => {
-    const date = document.getElementById('event_date').value;
-    const time = document.getElementById('event_time').value;
-    const dateError = document.getElementById('date_error');
-
-    if (date && time) {
-        try {
-            const response = await fetch(`/check_availability?date=${date}&time=${time}`);
-            const result = await response.json();
-
-            if (result.available === false) {
-                dateError.style.display = 'block';
-                dateError.textContent = "Это время уже занято!";
-                tg.MainButton.disable();
-                tg.MainButton.setParams({ color: '#e53935' }); // Red
-            } else {
-                dateError.style.display = 'none';
-                tg.MainButton.enable();
-                tg.MainButton.setParams({ color: tg.themeParams.button_color || '#2481cc' });
-            }
-        } catch (e) {
-            console.error("Check availability error:", e);
-        }
-    }
-};
-
-document.getElementById('event_date').addEventListener('change', checkDateTime);
-document.getElementById('event_time').addEventListener('change', checkDateTime);
-
 // Main Button Logic (Telegram)
 tg.MainButton.setText("ОПУБЛИКОВАТЬ ЗАЯВКУ");
 if (tg.initDataUnsafe && tg.initDataUnsafe.query_id) {
@@ -195,7 +167,8 @@ async function validateAndSubmit() {
     const isVideo = typeVideo.checked;
     const errors = [];
 
-    const transferVal = document.querySelector('input[name="transfer"]:checked').value;
+    const transferBtn = document.querySelector('input[name="transfer"]:checked');
+    const transferVal = transferBtn ? transferBtn.value : "Нет";
 
     const data = {
         media_type: isVideo ? "Видео" : "Фото",
@@ -221,7 +194,7 @@ async function validateAndSubmit() {
         data.video_format = document.getElementById('video_format').value;
         data.video_mood = document.getElementById('video_mood').value === 'other' ? document.getElementById('video_mood_custom').value : document.getElementById('video_mood').value;
         data.video_pace = document.getElementById('video_pace').value;
-        data.video_logos = document.getElementById('video_logos').value; // Simple text now
+        data.video_logos = document.getElementById('video_logos').value;
 
         if (interviewCheck.checked) {
             data.interview = {
@@ -253,7 +226,6 @@ async function validateAndSubmit() {
 
     if (tg.MainButton.isVisible) tg.MainButton.showProgress();
 
-    // Check if in TG
     if (!tg.initDataUnsafe || !tg.initDataUnsafe.query_id) {
         console.log("Submit data:", data);
         alert("Заявка сформирована (в консоли)! Для отправки боту используйте Telegram.");
