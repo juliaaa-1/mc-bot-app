@@ -37,7 +37,7 @@
                 <input type="number" id="photo_count_to" placeholder="До" min="1">
             </div>
 
-            <label style="margin-top: 10px;">Сколько нужно СРАЗУ (fast)? <span class="required-mark">*</span></label>
+            <label style="margin-top: 10px;">Сколько нужно СРАЗУ?</label>
             <div class="range-group">
                 <input type="number" id="photo_fast_from" placeholder="От" min="1">
                 <span class="range-divider">—</span>
@@ -104,12 +104,12 @@
             <label>Дата проведения <span class="required-mark">*</span></label>
             <input type="date" id="event_date">
 
-            <div style="display: flex; gap: 10px;">
-                <div style="flex: 1;">
+            <div class="time-row">
+                <div>
                     <label>Начало <span class="required-mark">*</span></label>
                     <input type="time" id="event_time">
                 </div>
-                <div style="flex: 1;">
+                <div>
                     <label>Окончание <span class="required-mark">*</span></label>
                     <input type="time" id="event_time_end">
                 </div>
@@ -148,9 +148,11 @@
         </div>
 
         <!-- Кнопки -->
-        <div class="button-group">
-            <button id="btn_publish" class="main-button">ОПУБЛИКОВАТЬ ЗАЯВКУ</button>
-            <button id="btn_clear" class="secondary-button">Очистить поля</button>
+        <div class="section">
+            <div class="button-group">
+                <button id="btn_publish" class="main-button">ОПУБЛИКОВАТЬ ЗАЯВКУ</button>
+                <button id="btn_clear" class="secondary-button">Очистить поля</button>
+            </div>
         </div>
 
         <div style="height: 50px;"></div>
