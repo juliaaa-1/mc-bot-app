@@ -63,35 +63,27 @@ interviewCheck.addEventListener('change', () => {
 // Clear Form Logic
 btnClear.addEventListener('click', () => {
     if (confirm("Очистить все поля?")) {
-        // Reset all text and number inputs
         const inputs = document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], input[type="time"], textarea');
         inputs.forEach(input => {
             input.value = '';
             input.disabled = false;
         });
 
-        // Reset selects
         const selects = document.querySelectorAll('select');
         selects.forEach(select => select.selectedIndex = 0);
 
-        // Reset radio buttons
         typePhoto.checked = true;
         document.getElementById('transfer_no').checked = true;
-
-        // Reset checkbox
         interviewCheck.checked = false;
 
-        // Hide dynamic elements
         document.querySelectorAll('.hidden-input, [id$="_custom"]').forEach(i => i.classList.add('hidden'));
         interviewDetails.classList.add('hidden');
 
         const dateErr = document.getElementById('date_error');
         if (dateErr) dateErr.style.display = 'none';
 
-        // Sync media type visibility
         toggleMediaType();
 
-        // Reset MainButton
         tg.MainButton.enable();
         tg.MainButton.setParams({
             color: tg.themeParams.button_color || '#2481cc',
@@ -153,7 +145,8 @@ document.addEventListener('click', (e) => {
 
 // Main Button Logic (Telegram)
 tg.MainButton.setText("ОПУБЛИКОВАТЬ ЗАЯВКУ");
-if (tg.initDataUnsafe && tg.initDataUnsafe.query_id) {
+// Всегда показываем главную кнопку, если мы в TG
+if (tg.initDataUnsafe && Object.keys(tg.initDataUnsafe).length > 0) {
     tg.MainButton.show();
     btnPublish.classList.add('hidden');
 }
@@ -226,16 +219,15 @@ async function validateAndSubmit() {
 
     if (tg.MainButton.isVisible) tg.MainButton.showProgress();
 
-    if (!tg.initDataUnsafe || !tg.initDataUnsafe.query_id) {
-        console.log("Submit data:", data);
-        alert("Заявка сформирована (в консоли)! Для отправки боту используйте Telegram.");
-        return;
-    }
-
+    // Пытаемся отправить данные в Telegram
     try {
         tg.sendData(JSON.stringify(data));
+        // На некоторых устройствах нужно явно вызвать закрытие
+        setTimeout(() => tg.close(), 100);
     } catch (e) {
-        alert("Ошибка: " + e.message);
+        console.log("Send data error (fallback to log):", e);
+        console.log("Data:", data);
+        alert("Заявка сформирована! (Если вы в браузере — это норма)");
         tg.MainButton.hideProgress();
     }
 }
