@@ -93,6 +93,27 @@ btnClear.addEventListener('click', () => {
 
 btnPublish.addEventListener('click', validateAndSubmit);
 
+// Hide keyboard helper
+const hideKeyboard = () => {
+    document.activeElement.blur();
+};
+
+// Hide on Enter key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            hideKeyboard();
+        }
+    }
+});
+
+// Hide on scroll/tap outside
+document.addEventListener('touchstart', (e) => {
+    if (!['INPUT', 'TEXTAREA', 'SELECT', 'OPTION'].includes(e.target.tagName)) {
+        hideKeyboard();
+    }
+}, { passive: true });
+
 // Address Autocomplete
 let debounceTimeout;
 locationInput.addEventListener('input', (e) => {
@@ -104,7 +125,7 @@ locationInput.addEventListener('input', (e) => {
     }
     debounceTimeout = setTimeout(async () => {
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`);
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=ru`);
             const data = await response.json();
             if (data.length > 0) renderSuggestions(data);
             else suggestionsContainer.classList.add('hidden');
@@ -147,8 +168,17 @@ async function validateAndSubmit() {
         location: document.getElementById('event_location').value,
         description: document.getElementById('event_desc').value,
         transfer: document.querySelector('input[name="transfer"]:checked').value,
-        deadline: document.getElementById('deadline_select').value === 'other' ? document.getElementById('deadline_custom').value : document.getElementById('deadline_select').value
+        deadline_val: document.getElementById('deadline_select').value
     };
+
+    if (data.deadline_val === 'other') {
+        data.deadline = document.getElementById('deadline_custom').value;
+    } else {
+        data.deadline = data.deadline_val;
+    }
+
+    // 🚩 Validation: Required selects
+    if (!data.deadline) errors.push("Укажите срок сдачи");
 
     // 🚩 Validation: Required
     if (!data.event_date) errors.push("Укажите дату");
@@ -175,9 +205,16 @@ async function validateAndSubmit() {
     if (isVideo) {
         data.video_duration = document.getElementById('video_duration').value;
         data.video_format = document.getElementById('video_format').value;
-        data.video_mood = document.getElementById('video_mood').value === 'other' ? document.getElementById('video_mood_custom').value : document.getElementById('video_mood').value;
+        data.video_mood_val = document.getElementById('video_mood').value;
         data.video_pace = document.getElementById('video_pace').value;
         data.video_logos = document.getElementById('video_logos').value;
+
+        if (!data.video_format) errors.push("Выберите формат видео");
+        if (!data.video_mood_val) errors.push("Выберите настроение ролика");
+        if (!data.video_pace) errors.push("Выберите темп монтажа");
+
+        data.video_mood = data.video_mood_val === 'other' ? document.getElementById('video_mood_custom').value : data.video_mood_val;
+        if (data.video_mood_val === 'other' && !data.video_mood) errors.push("Опишите настроение ролика");
 
         if (interviewCheck.checked) {
             data.interview = {
