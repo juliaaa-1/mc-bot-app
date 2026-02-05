@@ -54,17 +54,18 @@
 
             <label>Формат видео</label>
             <select id="video_format">
+                <option value="" disabled selected>Выберите из списка... ⌵</option>
                 <option value="Горизонтальное">Горизонтальное (16:9)</option>
                 <option value="Вертикальное">Вертикальное (9:16)</option>
                 <option value="Квадратное">Квадратное (1:1)</option>
             </select>
 
             <div class="toggle-wrapper" style="margin-top: 15px;">
-                <span class="toggle-label">Нужно интервью/синхрон?</span>
                 <label class="switch">
                     <input type="checkbox" id="video_interview_check">
                     <span class="slider"></span>
                 </label>
+                <span class="toggle-label" style="margin-left: 10px; flex: 1;">Нужно интервью/синхрон?</span>
             </div>
 
             <div id="interview_details" class="hidden" style="margin-top: 10px;">
@@ -77,6 +78,7 @@
 
             <label>Настроение ролика</label>
             <select id="video_mood">
+                <option value="" disabled selected>Выберите из списка... ⌵</option>
                 <option value="Радостный">Радостный</option>
                 <option value="Грустный">Грустный / Серьезный</option>
                 <option value="Динамичный">Динамичный</option>
@@ -87,6 +89,7 @@
 
             <label>Темп монтажа</label>
             <select id="video_pace">
+                <option value="" disabled selected>Выберите из списка... ⌵</option>
                 <option value="Быстрый">Быстрый</option>
                 <option value="Средний">Средний</option>
                 <option value="Медленный">Медленный</option>
@@ -139,6 +142,7 @@
 
             <label>Срок сдачи материалов</label>
             <select id="deadline_select">
+                <option value="" disabled selected>Выберите из списка... ⌵</option>
                 <option value="В день мероприятия">В день мероприятия</option>
                 <option value="На следующий день">На следующий день</option>
                 <option value="В течение 3 дней">В течение 3 дней</option>
