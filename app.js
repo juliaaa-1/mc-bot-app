@@ -16,10 +16,10 @@ if (!chat_id && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
 tg.expand();
 
 // -------------------------------------------------------------
-// 1. ИНИЦИАЛИЗАЦИЯ ПОЛЕЙ И ЛОГИКИ
+// 1. ИНИЦИАЛИЗАЦИЯ
 // -------------------------------------------------------------
 
-// Установка минимальной даты (сегодня)
+// Мин. дата
 const dateInput = document.getElementById('event_date');
 if (dateInput) {
     const today = new Date().toISOString().split('T')[0];
@@ -71,32 +71,55 @@ if (moodSelect) {
     });
 }
 
-// DADATA (Адреса)
+// DADATA (Адреса) - Настроено под РФ и мобилки
 $(document).ready(function () {
     $("#event_location").suggestions({
         token: "66993a4087ccdc37475149495b6c8ba6f73e728e",
         type: "ADDRESS",
         count: 5,
+        mobileWidth: true,        // Чтобы на телефоне было удобно
+        restrict_value: true,
+        constraints: {
+            locations: { country: "Россия" } // Ищем только по РФ
+        },
         onSelect: function (suggestion) {
-            console.log(suggestion);
+            console.log(suggestion); // Можно использовать для отладки
         }
     });
 });
 
-// Кнопка Очистить
+// Кнопка Очистить (через Native Popup)
 document.getElementById('btn_clear').addEventListener('click', () => {
-    if (confirm("Очистить всю форму?")) {
-        document.getElementById('requestForm').reset();
-        document.getElementById('interview_details').classList.add('hidden');
-        document.getElementById('deadline_custom').classList.add('hidden');
-        document.getElementById('video_mood_custom').classList.add('hidden');
-    }
+    tg.showPopup({
+        title: 'Очистка',
+        message: 'Вы уверены, что хотите очистить все поля?',
+        buttons: [
+            { id: 'yes', type: 'destructive', text: 'Да, очистить' },
+            { id: 'no', type: 'cancel' } // Кнопка отмены
+        ]
+    }, function (btnId) {
+        if (btnId === 'yes') {
+            document.getElementById('requestForm').reset();
+            document.getElementById('interview_details').classList.add('hidden');
+            document.getElementById('deadline_custom').classList.add('hidden');
+            document.getElementById('video_mood_custom').classList.add('hidden');
+        }
+    });
 });
 
 // -------------------------------------------------------------
 // 2. ВАЛИДАЦИЯ И ОТПРАВКА
 // -------------------------------------------------------------
 document.getElementById('btn_publish').addEventListener('click', validateAndSubmit);
+
+// Удобная функция для показа ошибок
+function showError(msg) {
+    tg.showPopup({
+        title: 'Ошибка',
+        message: msg,
+        buttons: [{ type: 'ok' }]
+    });
+}
 
 async function validateAndSubmit() {
     const form = document.getElementById('requestForm');
@@ -105,67 +128,65 @@ async function validateAndSubmit() {
 
     // --- ПРОВЕРКИ ---
 
-    // 1. Проверка даты (нельзя в прошлом)
+    // 1. Дата
     if (data.event_date) {
         const selectedDate = new Date(data.event_date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
         if (selectedDate < today) {
-            alert("❌ Ошибка: Дата мероприятия не может быть в прошлом!");
+            showError("Дата мероприятия не может быть в прошлом!");
             return;
         }
     } else {
-        alert("❌ Пожалуйста, выберите дату мероприятия.");
+        showError("Пожалуйста, выберите дату мероприятия.");
         return;
     }
 
-    // 2. Проверка Обязательных полей
+    // 2. Обязательные поля
     if (!data.event_time || !data.event_time_end) {
-        alert("❌ Пожалуйста, укажите время начала и окончания.");
+        showError("Пожалуйста, укажите время начала и окончания.");
         return;
     }
     const locationVal = document.getElementById('event_location').value;
     if (!locationVal || locationVal.trim().length === 0) {
-        alert("❌ Пожалуйста, укажите место проведения.");
+        showError("Пожалуйста, укажите место проведения.");
         return;
     }
     if (!data.description || data.description.trim().length === 0) {
-        alert("❌ Пожалуйста, добавьте описание мероприятия.");
+        showError("Пожалуйста, добавьте описание мероприятия.");
         return;
     }
 
-    // 3. Проверка ФОТО
+    // 3. Фото
     if (data.media_type === 'Фото') {
         const countFrom = parseFloat(data.photo_count_from);
         const countTo = parseFloat(data.photo_count_to);
         const fastFrom = data.photo_fast_from ? parseFloat(data.photo_fast_from) : null;
         const fastTo = data.photo_fast_to ? parseFloat(data.photo_fast_to) : null;
 
-        function isValidInt(num) {
-            return Number.isInteger(num) && num > 0;
-        }
+        function isValidInt(num) { return Number.isInteger(num) && num > 0; }
 
         if (!data.photo_count_from || !data.photo_count_to) {
-            alert("❌ Укажите количество фото (От и До).");
+            showError("Укажите количество фото (От и До).");
             return;
         }
         if (!isValidInt(countFrom) || !isValidInt(countTo)) {
-            alert("❌ Количество фото должно быть целым числом больше 0.");
+            showError("Количество фото должно быть целым числом больше 0.");
             return;
         }
         if (countFrom > countTo) {
-            alert("❌ Ошибка: 'От' не может быть больше 'До'.");
+            showError("'От' не может быть больше 'До'.");
             return;
         }
 
         if (data.photo_fast_from || data.photo_fast_to) {
             if (!isValidInt(fastFrom) || !isValidInt(fastTo)) {
-                alert("❌ Количество фото 'Сразу' должно быть целым числом.");
+                showError("Количество фото 'Сразу' должно быть целым числом.");
                 return;
             }
             if (fastFrom > fastTo) {
-                alert("❌ Ошибка 'Сразу': 'От' не может быть больше 'До'.");
+                showError("Ошибка 'Сразу': 'От' не может быть больше 'До'.");
                 return;
             }
         }
@@ -179,14 +200,14 @@ async function validateAndSubmit() {
         data.video_mood = data.video_mood_custom || document.getElementById('video_mood_custom').value;
     }
 
-    data.location = locationVal; // Берем адрес из input
+    data.location = locationVal;
 
     // --- ОТПРАВКА ---
     data.chat_id = chat_id;
     data.thread_id = thread_id;
 
-    // ССЫЛКА НА GOOGLE (Та самая, что ты уже вставила, я вставлю её снова)
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbERT0eR7DOI-A3uXxEszYKMehEaG-tD9eO_r2a-VqGv_0wW5q6k4rMhyZfC5E_h5iA/exec";
+    // Ссылка на Google Script
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyERT0eR7DOI-A3uXxEs2YKMhmWbJDAEjnIeKKD5AoNnzAxeyDiVjg5L4CE0hfvtdqQ/exec";
 
     tg.MainButton.setText("ОТПРАВЛЯЮ...");
     tg.MainButton.showProgress();
@@ -201,7 +222,7 @@ async function validateAndSubmit() {
             });
             tg.close();
         } catch (e) {
-            alert("Ошибка отправки: " + e.message);
+            showError("Ошибка отправки: " + e.message);
             tg.MainButton.hideProgress();
         }
     } else {
