@@ -32,6 +32,24 @@
                 </div>
             </div>
 
+            <!-- Отправитель заявки -->
+            <div class="section">
+                <h2>Кто заказывает?</h2>
+                <label>Отправитель <span class="required-mark">*</span></label>
+                <select id="sender_select" name="sender">
+                    <option value="" disabled selected>Выберите из списка... ⌵</option>
+                    <option value="МЦАО">МЦАО</option>
+                    <option value="ЦПМС">ЦПМС</option>
+                    <option value="ШМТО">ШМТО</option>
+                    <option value="РЦДАО">РЦДАО</option>
+                    <option value="Патриот">Патриот</option>
+                    <option value="Полюс">Полюс</option>
+                    <option value="other">Другое...</option>
+                </select>
+                <input type="text" id="sender_custom" name="custom_sender" class="hidden"
+                    placeholder="Введите название организации">
+            </div>
+
             <!-- Поля для Фото -->
             <div id="photo_fields" class="section fade-in">
                 <h2>📸 ТЗ для фотографа</h2>
