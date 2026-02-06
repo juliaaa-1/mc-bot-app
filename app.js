@@ -4,6 +4,7 @@ const tg = window.Telegram.WebApp;
 const urlParams = new URLSearchParams(window.location.search);
 let chat_id = urlParams.get('chat_id');
 let thread_id = urlParams.get('thread_id');
+let message_id = ""; // Новый параметр для удаления
 
 // Если зашли через t.me/bot/app?startapp=...
 if (!chat_id && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
@@ -11,6 +12,7 @@ if (!chat_id && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
     const parts = startParam.split('_');
     chat_id = parts[0];
     thread_id = parts[1] || "";
+    message_id = parts[2] || ""; // Считываем ID сообщения
 }
 
 tg.expand();
@@ -205,6 +207,7 @@ async function validateAndSubmit() {
     // --- ОТПРАВКА ---
     data.chat_id = chat_id;
     data.thread_id = thread_id;
+    data.message_id = message_id; // Передаем ID сообщения в Google
 
     // Ссылка на Google Script
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyERT0eR7DOI-A3uXxEs2YKMhmWbJDAEjnIeKKD5AoNnzAxeyDiVjg5L4CE0hfvtdqQ/exec";
