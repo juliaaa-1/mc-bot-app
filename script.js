@@ -62,6 +62,15 @@ if (moodSelect) {
     });
 }
 
+const senderSelect = document.getElementById('sender_select');
+if (senderSelect) {
+    senderSelect.addEventListener('change', (e) => {
+        const customInput = document.getElementById('sender_custom');
+        if (e.target.value === 'other') customInput.classList.remove('hidden');
+        else customInput.classList.add('hidden');
+    });
+}
+
 $(document).ready(function () {
     $("#event_location").suggestions({
         token: "1379cd2ac4b0d2070616f1c9861afefea8909fd0",
@@ -125,6 +134,16 @@ async function validateAndSubmit() {
         return;
     }
 
+    // 1.5 Проверка отправителя
+    if (!data.sender) {
+        showError("Пожалуйста, выберите отправителя заявки.");
+        return;
+    }
+    if (data.sender === 'other' && (!data.custom_sender || data.custom_sender.trim() === '')) {
+        showError("Пожалуйста, введите название организации.");
+        return;
+    }
+
     if (!data.event_time || !data.event_time_end) {
         showError("Пожалуйста, укажите время начала и окончания.");
         return;
@@ -177,6 +196,9 @@ async function validateAndSubmit() {
     }
     if (data.video_mood === 'other') {
         data.video_mood = data.video_mood_custom || document.getElementById('video_mood_custom').value;
+    }
+    if (data.sender === 'other') {
+        data.sender = data.custom_sender || document.getElementById('sender_custom').value;
     }
 
     data.location = locationVal;
