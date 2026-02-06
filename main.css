@@ -26,6 +26,8 @@ body {
     margin: 0 auto;
     padding: 16px;
     box-sizing: border-box;
+    overflow: visible !important;
+    /* Чтобы список адресов не обрезался */
 }
 
 .section {
@@ -36,6 +38,8 @@ body {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
     width: 100%;
+    overflow: visible !important;
+    /* Чтобы список адресов не обрезался */
 }
 
 h2 {
