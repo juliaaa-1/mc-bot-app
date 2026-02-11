@@ -4,6 +4,7 @@ const urlParams = new URLSearchParams(window.location.search);
 let chat_id = urlParams.get('chat_id');
 let thread_id = urlParams.get('thread_id');
 let message_id = "";
+let form_type = "default"; // 'default' or 'client'
 
 if (!chat_id && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
     const startParam = tg.initDataUnsafe.start_param;
@@ -11,6 +12,16 @@ if (!chat_id && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
     chat_id = parts[0];
     thread_id = parts[1] || "";
     message_id = parts[2] || "";
+    form_type = parts[3] === 'client' ? 'client' : 'default';
+}
+
+// Переключение интерфейса в зависимости от типа формы
+if (form_type === 'client') {
+    document.getElementById('block_sender').classList.add('hidden');
+    document.getElementById('block_client').classList.remove('hidden');
+} else {
+    document.getElementById('block_sender').classList.remove('hidden');
+    document.getElementById('block_client').classList.add('hidden');
 }
 
 tg.expand();
@@ -85,6 +96,9 @@ $(document).ready(function () {
             console.log(suggestion);
         }
     });
+
+    // Инициализация маски ввода телефона
+    initPhoneMask();
 });
 
 document.getElementById('btn_clear').addEventListener('click', () => {
@@ -134,14 +148,25 @@ async function validateAndSubmit() {
         return;
     }
 
-    // 1.5 Проверка отправителя
-    if (!data.sender) {
-        showError("Пожалуйста, выберите отправителя заявки.");
-        return;
-    }
-    if (data.sender === 'other' && (!data.custom_sender || data.custom_sender.trim() === '')) {
-        showError("Пожалуйста, введите название организации.");
-        return;
+    // 1.5 Проверка отправителя или заказчика
+    if (form_type === 'client') {
+        if (!data.client_name || data.client_name.trim() === '') {
+            showError("Пожалуйста, введите Заказчика (ФИО или организацию).");
+            return;
+        }
+        if (!data.client_phone || data.client_phone.trim().length < 10) {
+            showError("Пожалуйста, введите корректный номер телефона.");
+            return;
+        }
+    } else {
+        if (!data.sender) {
+            showError("Пожалуйста, выберите отправителя заявки.");
+            return;
+        }
+        if (data.sender === 'other' && (!data.custom_sender || data.custom_sender.trim() === '')) {
+            showError("Пожалуйста, введите название организации.");
+            return;
+        }
     }
 
     if (!data.event_time || !data.event_time_end) {
@@ -197,7 +222,9 @@ async function validateAndSubmit() {
     if (data.video_mood === 'other') {
         data.video_mood = data.video_mood_custom || document.getElementById('video_mood_custom').value;
     }
-    if (data.sender === 'other') {
+
+    // Обработка данных отправителя для обычного режима
+    if (form_type !== 'client' && data.sender === 'other') {
         data.sender = data.custom_sender || document.getElementById('sender_custom').value;
     }
 
@@ -205,7 +232,9 @@ async function validateAndSubmit() {
     data.chat_id = chat_id;
     data.thread_id = thread_id;
     data.message_id = message_id;
+    data.form_type = form_type; // Передаем тип формы скрипту
 
+    // Публичная ссылка на Google Script (Deployment ID)
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyERT0eR7DOI-A3uXxEs2YKMhmWbJDAEjnIeKKD5AoNnzAxeyDiVjg5L4CE0hfvtdqQ/exec";
 
     tg.MainButton.setText("ОТПРАВЛЯЮ...");
@@ -229,3 +258,81 @@ async function validateAndSubmit() {
         setTimeout(() => tg.close(), 100);
     }
 }
+
+// === ЛОГИКА МАСКИ ТЕЛЕФОНА ===
+function initPhoneMask() {
+    let phoneInputs = document.querySelectorAll('input[data-tel-input]');
+
+    let getInputNumbersValue = function (input) {
+        return input.value.replace(/\D/g, "");
+    }
+
+    let onPhoneInput = function (e) {
+        let input = e.target,
+            inputNumbersValue = getInputNumbersValue(input);
+        formattedInputValue = "";
+        selectionStart = input.selectionStart;
+
+        if (!inputNumbersValue) {
+            return input.value = "";
+        }
+
+        if (input.value.length != selectionStart) {
+            if (e.data && /\D/g.test(e.data)) {
+                input.value = inputNumbersValue;
+            }
+            return;
+        }
+
+        if (["7", "8", "9"].indexOf(inputNumbersValue[0]) > -1) {
+            //russian number
+            if (inputNumbersValue[0] == "9") inputNumbersValue = "7" + inputNumbersValue;
+            let firstSymbols = (inputNumbersValue[0] == "8") ? "8" : "+7";
+            formattedInputValue = firstSymbols + " ";
+            if (inputNumbersValue.length > 1) {
+                formattedInputValue += "(" + inputNumbersValue.substring(1, 4);
+            }
+            if (inputNumbersValue.length >= 5) {
+                formattedInputValue += ") " + inputNumbersValue.substring(4, 7);
+            }
+            if (inputNumbersValue.length >= 8) {
+                formattedInputValue += "-" + inputNumbersValue.substring(7, 9);
+            }
+            if (inputNumbersValue.length >= 10) {
+                formattedInputValue += "-" + inputNumbersValue.substring(9, 11);
+            }
+        } else {
+            // Not russian number
+            formattedInputValue = "+" + inputNumbersValue.substring(0, 16);
+        }
+        input.value = formattedInputValue;
+    }
+
+    let onPhoneKeyDown = function (e) {
+        let input = e.target;
+        if (e.keyCode == 8 && getInputNumbersValue(input).length == 1) {
+            input.value = "";
+        }
+    }
+
+    let onPhonePaste = function (e) {
+        let pastedText = e.clipboardData || window.clipboardData;
+        input = e.target;
+        inputNumbersValue = getInputNumbersValue(input);
+
+        if (pastedText) {
+            let text = pastedText.getData("Text");
+            if (/\D/g.test(text)) {
+                input.value = inputNumbersValue;
+            }
+        }
+    }
+
+    for (let i = 0; i < phoneInputs.length; i++) {
+        let input = phoneInputs[i];
+        input.addEventListener("input", onPhoneInput);
+        input.addEventListener("keydown", onPhoneKeyDown);
+        input.addEventListener("paste", onPhonePaste);
+    }
+}
+
