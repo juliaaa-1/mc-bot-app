@@ -130,6 +130,15 @@ function showError(msg) {
 }
 
 async function validateAndSubmit() {
+    // ДИАГНОСТИКА: Проверка наличия ID чата
+    if (!chat_id) {
+        tg.showPopup({
+            title: 'Ошибка',
+            message: 'ОШИБКА: Нет ID чата. Попробуйте перезапустить бота через меню или команду /заявка. start_param: ' + (tg.initDataUnsafe ? tg.initDataUnsafe.start_param : 'нет')
+        });
+        return;
+    }
+
     const form = document.getElementById('requestForm');
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
@@ -235,6 +244,7 @@ async function validateAndSubmit() {
     data.form_type = form_type; // Передаем тип формы скрипту
 
     // Публичная ссылка на Google Script (Deployment ID)
+    // ВНИМАНИЕ: Если вы сделали New Deployment, замените ссылку ниже!
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyERT0eR7DOI-A3uXxEs2YKMhmWbJDAEjnIeKKD5AoNnzAxeyDiVjg5L4CE0hfvtdqQ/exec";
 
     tg.MainButton.setText("ОТПРАВЛЯЮ...");
@@ -246,14 +256,19 @@ async function validateAndSubmit() {
             await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                body: JSON.stringify(data)
+                body: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8'
+                }
             });
+            tg.MainButton.hideProgress();
             tg.close();
         } catch (e) {
             showError("Ошибка отправки: " + e.message);
             tg.MainButton.hideProgress();
         }
     } else {
+        // Резервный метод, если fetch не сработал (но без chat_id мы сюда не дойдем)
         tg.sendData(JSON.stringify(data));
         setTimeout(() => tg.close(), 100);
     }
@@ -335,5 +350,4 @@ function initPhoneMask() {
         input.addEventListener("paste", onPhonePaste);
     }
 }
-
 
