@@ -163,8 +163,9 @@ async function validateAndSubmit() {
             showError("Пожалуйста, введите Заказчика (ФИО или организацию).");
             return;
         }
-        if (!data.client_phone || data.client_phone.trim().length < 10) {
-            showError("Пожалуйста, введите корректный номер телефона.");
+        // Телефон теперь необязательный, но если введен — проверяем длину
+        if (data.client_phone && data.client_phone.trim().length > 0 && data.client_phone.trim().length < 10) {
+            showError("Пожалуйста, введите корректный полные номер телефона (или оставьте поле пустым).");
             return;
         }
     } else {
