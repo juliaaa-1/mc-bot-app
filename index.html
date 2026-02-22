@@ -145,8 +145,21 @@
             <div class="section">
                 <h2>📅 Дата и место</h2>
 
-                <label>Дата проведения <span class="required-mark">*</span></label>
+                <label>Дата начала <span class="required-mark">*</span></label>
                 <input type="date" id="event_date" name="event_date">
+
+                <div class="toggle-wrapper" style="margin-top: 5px; margin-bottom: 15px; display: flex; align-items: center;">
+                    <label class="switch">
+                        <input type="checkbox" id="multi_day_check" name="is_multi_day">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="toggle-label" style="margin-left: 10px; flex: 1; font-size: 14px;">Мероприятие длится несколько дней</span>
+                </div>
+
+                <div id="end_date_block" class="hidden">
+                    <label>Дата окончания <span class="required-mark">*</span></label>
+                    <input type="date" id="event_date_end" name="event_date_end">
+                </div>
 
                 <div class="time-row">
                     <div>
