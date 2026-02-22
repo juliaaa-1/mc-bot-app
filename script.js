@@ -55,6 +55,18 @@ if (interviewCheck) {
     });
 }
 
+const multiDayCheck = document.getElementById('multi_day_check');
+if (multiDayCheck) {
+    multiDayCheck.addEventListener('change', (e) => {
+        const endBlock = document.getElementById('end_date_block');
+        if (e.target.checked) endBlock.classList.remove('hidden');
+        else {
+            endBlock.classList.add('hidden');
+            document.getElementById('event_date_end').value = "";
+        }
+    });
+}
+
 const deadlineSelect = document.getElementById('deadline_select');
 if (deadlineSelect) {
     deadlineSelect.addEventListener('change', (e) => {
@@ -149,11 +161,23 @@ async function validateAndSubmit() {
         today.setHours(0, 0, 0, 0);
 
         if (selectedDate < today) {
-            showError("Дата мероприятия не может быть в прошлом!");
+            showError("Дата начала не может быть в прошлом!");
             return;
         }
+
+        if (data.is_multi_day === 'on') {
+            if (!data.event_date_end) {
+                showError("Пожалуйста, выберите дату окончания.");
+                return;
+            }
+            const endDate = new Date(data.event_date_end);
+            if (endDate < selectedDate) {
+                showError("Дата окончания не может быть раньше даты начала!");
+                return;
+            }
+        }
     } else {
-        showError("Пожалуйста, выберите дату мероприятия.");
+        showError("Пожалуйста, выберите дату начала.");
         return;
     }
 
