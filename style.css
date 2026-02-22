@@ -81,6 +81,22 @@ textarea {
     appearance: none;
 }
 
+input[type="file"] {
+    padding: 10px;
+    background: #f9f9f9;
+    font-size: 14px;
+}
+
+input[type="file"]::file-selector-button {
+    background: var(--button-color);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
 input:focus,
 select:focus,
 textarea:focus {
