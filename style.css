@@ -82,19 +82,74 @@ textarea {
 }
 
 input[type="file"] {
-    padding: 10px;
-    background: #f9f9f9;
-    font-size: 14px;
+    display: none;
 }
 
-input[type="file"]::file-selector-button {
+.file-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #f8f8f8;
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px dashed var(--border-color);
+}
+
+.file-custom-btn {
     background: var(--button-color);
     color: white;
     border: none;
-    padding: 8px 12px;
-    border-radius: 6px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
+    flex-shrink: 0;
+    width: auto !important;
+}
+
+.file-custom-btn:disabled {
+    background: #ccc;
+    cursor: not_allowed;
+}
+
+#file_status_text {
+    font-size: 14px;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#file_list_container {
+    margin-top: 10px;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    border: 1px solid #eee;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    font-size: 13px;
+}
+
+.file-item-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     margin-right: 10px;
+}
+
+.file-item-delete {
+    color: #ff3b30;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
 }
 
 input:focus,
