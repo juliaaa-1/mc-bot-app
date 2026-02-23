@@ -205,10 +205,7 @@ function showError(msg) {
 function validateAndSubmit() {
     // 1. Проверка наличия ID чата
     if (!chat_id) {
-        tg.showPopup({
-            title: 'Ошибка',
-            message: 'ОШИБКА: Нет ID чата. Попробуйте перезапустить бота через меню или команду /заявка.'
-        });
+        showError('ОШИБКА: Нет ID чата. Попробуйте перезапустить бота через меню или команду /заявка.');
         return;
     }
 
@@ -293,7 +290,7 @@ function validateAndSubmit() {
     // 7. ЗАКРЫВАЕМ ОКНО
     setTimeout(() => {
         tg.close();
-    }, 350);
+    }, 250);
 }
 
 // === ЛОГИКА МАСКИ ТЕЛЕФОНА ===
