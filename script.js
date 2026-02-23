@@ -203,11 +203,11 @@ function showError(msg) {
 }
 
 function validateAndSubmit() {
-    // ДИАГНОСТИКА: Проверка наличия ID чата
+    // 1. Проверка наличия ID чата
     if (!chat_id) {
         tg.showPopup({
             title: 'Ошибка',
-            message: 'ОШИБКА: Нет ID чата. Попробуйте перезапустить бота через меню или команду /заявка. start_param: ' + (tg.initDataUnsafe ? tg.initDataUnsafe.start_param : 'нет')
+            message: 'ОШИБКА: Нет ID чата. Попробуйте перезапустить бота через меню или команду /заявка.'
         });
         return;
     }
@@ -215,13 +215,14 @@ function validateAndSubmit() {
     const form = document.getElementById('requestForm');
     const formData = new FormData(form);
 
-    // Добавляем реально накопленные файлы
+    // 2. Добавляем файлы
     selectedFiles.forEach(file => {
         formData.append('files', file);
     });
 
     const data = Object.fromEntries(formData.entries());
 
+    // 3. Валидация дат
     if (data.event_date) {
         const selectedDate = new Date(data.event_date);
         const today = new Date();
@@ -248,7 +249,7 @@ function validateAndSubmit() {
         return;
     }
 
-    // Остальные валидации
+    // 4. Остальные валидации
     const locationVal = document.getElementById('event_location').value;
     if (!locationVal || locationVal.trim().length === 0) {
         showError("Пожалуйста, укажите место проведения."); return;
@@ -269,7 +270,7 @@ function validateAndSubmit() {
         data.deadline = data.custom_deadline || document.getElementById('deadline_custom').value;
     }
 
-    // Добавляем технические поля
+    // 5. ДОБАВЛЯЕМ ТЕХНИЧЕСКИЕ ПОЛЯ (ОЧЕНЬ ВАЖНО)
     formData.append('location', locationVal);
     formData.append('chat_id', chat_id);
     formData.append('thread_id', thread_id);
@@ -283,16 +284,16 @@ function validateAndSubmit() {
     tg.MainButton.showProgress();
     tg.MainButton.show();
 
-    // Отправляем БЕЗ await и закрываем окно моментально
+    // 6. ОТПРАВЛЯЕМ БЕЗ AWAIT (Чтобы окно закрылось сразу)
     fetch(PYTHON_BACKEND_URL, {
         method: 'POST',
         body: formData
     }).catch(e => console.error("Ошибка отправки:", e));
 
-    // Даем 100мс чтобы запрос улетел из браузера и закрываем окно
+    // 7. ЗАКРЫВАЕМ ОКНО
     setTimeout(() => {
         tg.close();
-    }, 100);
+    }, 350);
 }
 
 // === ЛОГИКА МАСКИ ТЕЛЕФОНА ===
