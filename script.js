@@ -202,7 +202,7 @@ function showError(msg) {
     });
 }
 
-async function validateAndSubmit() {
+function validateAndSubmit() {
     // ДИАГНОСТИКА: Проверка наличия ID чата
     if (!chat_id) {
         tg.showPopup({
@@ -248,25 +248,6 @@ async function validateAndSubmit() {
         return;
     }
 
-    /*
-    // 1. Сначала пробуем создать событие в Google Календаре
-    let calendarLink = "";
-    try {
-        const dataForGoogle = {};
-        formData.forEach((value, key) => {
-            if (!(value instanceof File)) dataForGoogle[key] = value;
-        });
-
-        const googleResponse = await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors', // Важно для Apps Script
-            body: JSON.stringify(dataForGoogle)
-        });
-    } catch (e) {
-        console.error("Ошибка календаря:", e);
-    }
-    */
-
     // Остальные валидации
     const locationVal = document.getElementById('event_location').value;
     if (!locationVal || locationVal.trim().length === 0) {
@@ -302,23 +283,16 @@ async function validateAndSubmit() {
     tg.MainButton.showProgress();
     tg.MainButton.show();
 
-    try {
-        const response = await fetch(PYTHON_BACKEND_URL, {
-            method: 'POST',
-            body: formData
-        });
+    // Отправляем БЕЗ await и закрываем окно моментально
+    fetch(PYTHON_BACKEND_URL, {
+        method: 'POST',
+        body: formData
+    }).catch(e => console.error("Ошибка отправки:", e));
 
-        if (response.ok) {
-            tg.MainButton.hideProgress();
-            tg.close();
-        } else {
-            showError("Ошибка сервера: " + response.status);
-            tg.MainButton.hideProgress();
-        }
-    } catch (e) {
-        showError("Ошибка отправки: " + e.message);
-        tg.MainButton.hideProgress();
-    }
+    // Даем 100мс чтобы запрос улетел из браузера и закрываем окно
+    setTimeout(() => {
+        tg.close();
+    }, 100);
 }
 
 // === ЛОГИКА МАСКИ ТЕЛЕФОНА ===
@@ -397,6 +371,3 @@ function initPhoneMask() {
         input.addEventListener("paste", onPhonePaste);
     }
 }
-
-
-
