@@ -277,7 +277,7 @@ async function validateAndSubmit() {
     formData.append('form_type', form_type);
 
     // УРЛ ТВОЕГО БОТА НА PYTHONANYWHERE
-    const PYTHON_BACKEND_URL = "/submit";
+    const PYTHON_BACKEND_URL = "https://yuliyaanisimova06.pythonanywhere.com/submit";
 
     tg.MainButton.setText("ОТПРАВЛЯЮ...");
     tg.MainButton.showProgress();
