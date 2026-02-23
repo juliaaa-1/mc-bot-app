@@ -55,6 +55,8 @@ if (interviewCheck) {
     });
 }
 
+let selectedFiles = [];
+
 const multiDayCheck = document.getElementById('multi_day_check');
 if (multiDayCheck) {
     multiDayCheck.addEventListener('change', (e) => {
@@ -66,6 +68,65 @@ if (multiDayCheck) {
         }
     });
 }
+
+// ЛОГИКА ФАЙЛОВ
+const fileInput = document.getElementById('event_files');
+const fakeBtn = document.getElementById('fake_file_btn');
+const fileListContainer = document.getElementById('file_list_container');
+const statusText = document.getElementById('file_status_text');
+
+fakeBtn.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', (e) => {
+    const newFiles = Array.from(e.target.files);
+
+    for (let file of newFiles) {
+        if (selectedFiles.length < 5) {
+            // Простейшая проверка, чтобы не добавлять один и тот же файл дважды подряд
+            if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+                selectedFiles.push(file);
+            }
+        }
+    }
+
+    updateFileUI();
+    fileInput.value = ""; // Очищаем для возможности выбора того же файла
+});
+
+function updateFileUI() {
+    fileListContainer.innerHTML = '';
+
+    selectedFiles.forEach((file, index) => {
+        const item = document.createElement('div');
+        item.className = 'file-item';
+        item.innerHTML = `
+            <span class="file-item-name">${file.name}</span>
+            <span class="file-item-delete" onclick="removeFile(${index})">×</span>
+        `;
+        fileListContainer.appendChild(item);
+    });
+
+    const count = selectedFiles.length;
+    if (count === 0) {
+        statusText.innerText = "Файлы не выбраны";
+    } else {
+        const ending = getFileEnding(count);
+        statusText.innerText = `Выбран${count === 1 ? '' : 'о'} ${count} файл${ending}`;
+    }
+
+    fakeBtn.disabled = count >= 5;
+}
+
+function getFileEnding(count) {
+    if (count === 1) return "";
+    if (count >= 2 && count <= 4) return "а";
+    return "ов";
+}
+
+window.removeFile = function (index) {
+    selectedFiles.splice(index, 1);
+    updateFileUI();
+};
 
 const deadlineSelect = document.getElementById('deadline_select');
 if (deadlineSelect) {
@@ -153,6 +214,12 @@ async function validateAndSubmit() {
 
     const form = document.getElementById('requestForm');
     const formData = new FormData(form);
+
+    // Добавляем реально накопленные файлы
+    selectedFiles.forEach(file => {
+        formData.append('files', file);
+    });
+
     const data = Object.fromEntries(formData.entries());
 
     if (data.event_date) {
@@ -181,121 +248,57 @@ async function validateAndSubmit() {
         return;
     }
 
-    // 1.5 Проверка отправителя или заказчика
-    if (form_type === 'client') {
-        if (!data.client_name || data.client_name.trim() === '') {
-            showError("Пожалуйста, введите Заказчика (ФИО или организацию).");
-            return;
-        }
-        // Телефон теперь необязательный, но если введен — проверяем длину
-        if (data.client_phone && data.client_phone.trim().length > 0 && data.client_phone.trim().length < 10) {
-            showError("Пожалуйста, введите корректный полные номер телефона (или оставьте поле пустым).");
-            return;
-        }
-    } else {
-        if (!data.sender) {
-            showError("Пожалуйста, выберите отправителя заявки.");
-            return;
-        }
-        if (data.sender === 'other' && (!data.custom_sender || data.custom_sender.trim() === '')) {
-            showError("Пожалуйста, введите название организации.");
-            return;
-        }
-    }
-
-    if (!data.event_time || !data.event_time_end) {
-        showError("Пожалуйста, укажите время начала и окончания.");
-        return;
-    }
+    // Остальные валидации
     const locationVal = document.getElementById('event_location').value;
     if (!locationVal || locationVal.trim().length === 0) {
-        showError("Пожалуйста, укажите место проведения.");
-        return;
+        showError("Пожалуйста, укажите место проведения."); return;
     }
     if (!data.description || data.description.trim().length === 0) {
-        showError("Пожалуйста, добавьте описание мероприятия.");
-        return;
+        showError("Пожалуйста, добавьте описание мероприятия."); return;
     }
 
     if (data.media_type === 'Фото') {
-        const countFrom = parseFloat(data.photo_count_from);
-        const countTo = parseFloat(data.photo_count_to);
-        const fastFrom = data.photo_fast_from ? parseFloat(data.photo_fast_from) : null;
-        const fastTo = data.photo_fast_to ? parseFloat(data.photo_fast_to) : null;
-
-        function isValidInt(num) { return Number.isInteger(num) && num > 0; }
-
-        if (!data.photo_count_from || !data.photo_count_to) {
-            showError("Укажите количество фото (От и До).");
-            return;
-        }
-        if (!isValidInt(countFrom) || !isValidInt(countTo)) {
-            showError("Количество фото должно быть целым числом больше 0.");
-            return;
-        }
-        if (countFrom > countTo) {
-            showError("'От' не может быть больше 'До'.");
-            return;
-        }
-
-        if (data.photo_fast_from || data.photo_fast_to) {
-            if (!isValidInt(fastFrom) || !isValidInt(fastTo)) {
-                showError("Количество фото 'Сразу' должно быть целым числом.");
-                return;
-            }
-            if (fastFrom > fastTo) {
-                showError("Ошибка 'Сразу': 'От' не может быть больше 'До'.");
-                return;
-            }
+        const countFrom = parseInt(data.photo_count_from);
+        const countTo = parseInt(data.photo_count_to);
+        if (!countFrom || !countTo || countFrom > countTo) {
+            showError("Проверьте количество фото (От и До)."); return;
         }
     }
 
     if (data.deadline === 'other') {
         data.deadline = data.custom_deadline || document.getElementById('deadline_custom').value;
     }
-    if (data.video_mood === 'other') {
-        data.video_mood = data.video_mood_custom || document.getElementById('video_mood_custom').value;
-    }
 
-    // Обработка данных отправителя для обычного режима
-    if (form_type !== 'client' && data.sender === 'other') {
-        data.sender = data.custom_sender || document.getElementById('sender_custom').value;
-    }
+    // Добавляем технические поля
+    formData.append('location', locationVal);
+    formData.append('chat_id', chat_id);
+    formData.append('thread_id', thread_id);
+    formData.append('message_id', message_id);
+    formData.append('form_type', form_type);
 
-    data.location = locationVal;
-    data.chat_id = chat_id;
-    data.thread_id = thread_id;
-    data.message_id = message_id;
-    data.form_type = form_type; // Передаем тип формы скрипту
-
-    // Публичная ссылка на Google Script (Deployment ID)
-    // ВНИМАНИЕ: Если вы сделали New Deployment, замените ссылку ниже!
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyERT0eR7DOI-A3uXxEs2YKMhmWbJDAEjnIeKKD5AoNnzAxeyDiVjg5L4CE0hfvtdqQ/exec";
+    // УРЛ ТВОЕГО БОТА НА PYTHONANYWHERE
+    const PYTHON_BACKEND_URL = "/submit";
 
     tg.MainButton.setText("ОТПРАВЛЯЮ...");
     tg.MainButton.showProgress();
     tg.MainButton.show();
 
-    if (chat_id) {
-        try {
-            await fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify(data),
-                headers: {
-                    'Content-Type': 'text/plain;charset=utf-8'
-                }
-            });
+    try {
+        const response = await fetch(PYTHON_BACKEND_URL, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
             tg.MainButton.hideProgress();
             tg.close();
-        } catch (e) {
-            showError("Ошибка отправки: " + e.message);
+        } else {
+            showError("Ошибка сервера: " + response.status);
             tg.MainButton.hideProgress();
         }
-    } else {
-        // Резервный метод, если fetch не сработал (но без chat_id мы сюда не дойдем)
-        tg.sendData(JSON.stringify(data));
-        setTimeout(() => tg.close(), 100);
+    } catch (e) {
+        showError("Ошибка отправки: " + e.message);
+        tg.MainButton.hideProgress();
     }
 }
 
