@@ -248,6 +248,25 @@ async function validateAndSubmit() {
         return;
     }
 
+    /*
+    // 1. Сначала пробуем создать событие в Google Календаре
+    let calendarLink = "";
+    try {
+        const dataForGoogle = {};
+        formData.forEach((value, key) => {
+            if (!(value instanceof File)) dataForGoogle[key] = value;
+        });
+
+        const googleResponse = await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors', // Важно для Apps Script
+            body: JSON.stringify(dataForGoogle)
+        });
+    } catch (e) {
+        console.error("Ошибка календаря:", e);
+    }
+    */
+
     // Остальные валидации
     const locationVal = document.getElementById('event_location').value;
     if (!locationVal || locationVal.trim().length === 0) {
@@ -378,5 +397,6 @@ function initPhoneMask() {
         input.addEventListener("paste", onPhonePaste);
     }
 }
+
 
 
