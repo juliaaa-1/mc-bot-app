@@ -82,7 +82,6 @@ fileInput.addEventListener('change', (e) => {
 
     for (let file of newFiles) {
         if (selectedFiles.length < 5) {
-            // Простейшая проверка, чтобы не добавлять один и тот же файл дважды подряд
             if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
                 selectedFiles.push(file);
             }
@@ -90,7 +89,7 @@ fileInput.addEventListener('change', (e) => {
     }
 
     updateFileUI();
-    fileInput.value = ""; // Очищаем для возможности выбора того же файла
+    fileInput.value = "";
 });
 
 function updateFileUI() {
@@ -170,7 +169,6 @@ $(document).ready(function () {
         }
     });
 
-    // Инициализация маски ввода телефона
     initPhoneMask();
 });
 
@@ -188,6 +186,8 @@ document.getElementById('btn_clear').addEventListener('click', () => {
             document.getElementById('interview_details').classList.add('hidden');
             document.getElementById('deadline_custom').classList.add('hidden');
             document.getElementById('video_mood_custom').classList.add('hidden');
+            selectedFiles = [];
+            updateFileUI();
         }
     });
 });
@@ -196,30 +196,28 @@ document.getElementById('btn_publish').addEventListener('click', validateAndSubm
 
 function showError(msg) {
     tg.showPopup({
-        title: 'Ошибка',
+        title: 'Результат',
         message: msg,
         buttons: [{ type: 'ok' }]
     });
 }
 
 function validateAndSubmit() {
-    // 1. Проверка наличия ID чата
-    if (!chat_id) {
-        showError('ОШИБКА: Нет ID чата. Попробуйте перезапустить бота через меню или команду /заявка.');
+    // ВАЖНО: Проверка наличия ID чата
+    if (!chat_id || chat_id === "null" || chat_id === "undefined") {
+        showError('ОШИБКА: Нет ID чата. Закройте форму и снова нажмите на кнопку в боте.');
         return;
     }
 
     const form = document.getElementById('requestForm');
     const formData = new FormData(form);
 
-    // 2. Добавляем файлы
     selectedFiles.forEach(file => {
         formData.append('files', file);
     });
 
     const data = Object.fromEntries(formData.entries());
 
-    // 3. Валидация дат
     if (data.event_date) {
         const selectedDate = new Date(data.event_date);
         const today = new Date();
@@ -246,7 +244,6 @@ function validateAndSubmit() {
         return;
     }
 
-    // 4. Остальные валидации
     const locationVal = document.getElementById('event_location').value;
     if (!locationVal || locationVal.trim().length === 0) {
         showError("Пожалуйста, укажите место проведения."); return;
@@ -267,33 +264,44 @@ function validateAndSubmit() {
         data.deadline = data.custom_deadline || document.getElementById('deadline_custom').value;
     }
 
-    // 5. ДОБАВЛЯЕМ ТЕХНИЧЕСКИЕ ПОЛЯ (ОЧЕНЬ ВАЖНО)
     formData.append('location', locationVal);
     formData.append('chat_id', chat_id);
     formData.append('thread_id', thread_id);
     formData.append('message_id', message_id);
     formData.append('form_type', form_type);
 
-    // УРЛ ТВОЕГО БОТА НА PYTHONANYWHERE
     const PYTHON_BACKEND_URL = "https://yuliyaanisimova06.pythonanywhere.com/submit/";
 
     tg.MainButton.setText("ОТПРАВЛЯЮ...");
     tg.MainButton.showProgress();
     tg.MainButton.show();
 
-    // 6. ОТПРАВЛЯЕМ БЕЗ AWAIT (Чтобы окно закрылось сразу)
+    console.log("Отправка на:", PYTHON_BACKEND_URL);
+
     fetch(PYTHON_BACKEND_URL, {
         method: 'POST',
         body: formData
-    }).catch(e => console.error("Ошибка отправки:", e));
-
-    // 7. ЗАКРЫВАЕМ ОКНО
-    setTimeout(() => {
-        tg.close();
-    }, 250);
+    })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(d => { throw new Error(d.message || 'Ошибка сервера: ' + response.status) });
+            }
+            return response.json();
+        })
+        .then(res => {
+            console.log("Успех:", res);
+            tg.MainButton.hideProgress();
+            tg.MainButton.setText("ГОТОВО!");
+            setTimeout(() => tg.close(), 600);
+        })
+        .catch(error => {
+            console.error("Ошибка отправки:", error);
+            tg.MainButton.hideProgress();
+            tg.MainButton.setText("ОШИБКА!");
+            showError("ОШИБКА ПРИ ОТПРАВКЕ: " + error.message + "\nПроверьте интернет или статус сервера.");
+        });
 }
 
-// === ЛОГИКА МАСКИ ТЕЛЕФОНА ===
 function initPhoneMask() {
     let phoneInputs = document.querySelectorAll('input[data-tel-input]');
 
@@ -319,7 +327,6 @@ function initPhoneMask() {
         }
 
         if (["7", "8", "9"].indexOf(inputNumbersValue[0]) > -1) {
-            //russian number
             if (inputNumbersValue[0] == "9") inputNumbersValue = "7" + inputNumbersValue;
             let firstSymbols = (inputNumbersValue[0] == "8") ? "8" : "+7";
             formattedInputValue = firstSymbols + " ";
@@ -336,7 +343,6 @@ function initPhoneMask() {
                 formattedInputValue += "-" + inputNumbersValue.substring(9, 11);
             }
         } else {
-            // Not russian number
             formattedInputValue = "+" + inputNumbersValue.substring(0, 16);
         }
         input.value = formattedInputValue;
