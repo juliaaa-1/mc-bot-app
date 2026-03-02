@@ -270,7 +270,8 @@ function validateAndSubmit() {
     formData.append('message_id', message_id);
     formData.append('form_type', form_type);
 
-    const PYTHON_BACKEND_URL = "https://yuliyaanisimova06.pythonanywhere.com/submit/";
+    // Используем прокси-сервис для обхода блокировок домена pythonanywhere в РФ
+    const PYTHON_BACKEND_URL = "https://corsproxy.io/?https://yuliyaanisimova06.pythonanywhere.com/submit/";
 
     tg.MainButton.setText("ОТПРАВЛЯЮ...");
     tg.MainButton.showProgress();
