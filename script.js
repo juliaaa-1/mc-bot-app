@@ -289,16 +289,22 @@ function validateAndSubmit() {
             return response.json();
         })
         .then(res => {
-            console.log("Успех:", res);
-            tg.MainButton.hideProgress();
-            tg.MainButton.setText("ГОТОВО!");
-            setTimeout(() => tg.close(), 600);
+            console.log("Ответ сервера:", res);
+            if (res.status === 'success') {
+                tg.MainButton.hideProgress();
+                tg.MainButton.setText("ГОТОВО!");
+                setTimeout(() => tg.close(), 800);
+            } else {
+                tg.MainButton.hideProgress();
+                tg.MainButton.setText("ОШИБКА!");
+                showError("СЕРВЕР ВЕРНУЛ ОШИБКУ:\n" + (res.message || "Неизвестная ошибка"));
+            }
         })
         .catch(error => {
             console.error("Ошибка отправки:", error);
             tg.MainButton.hideProgress();
             tg.MainButton.setText("ОШИБКА!");
-            showError("ОШИБКА ПРИ ОТПРАВКЕ: " + error.message + "\nПроверьте интернет или статус сервера.");
+            showError("КРИТИЧЕСКАЯ ОШИБКА ПРИ ОТПРАВКЕ:\n" + error.message + "\n\nПроверьте интернет или VPN. Если VPN включен, попробуйте выключить (или наоборот).");
         });
 }
 
