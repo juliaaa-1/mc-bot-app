@@ -278,6 +278,10 @@ function validateAndSubmit() {
 
     console.log("Отправка на:", PYTHON_BACKEND_URL);
 
+    // Закрываем форму СРАЗУ, ответ ловим в фоне
+    tg.MainButton.setText("ГОТОВО!");
+    setTimeout(() => tg.close(), 200);
+
     fetch(PYTHON_BACKEND_URL, {
         method: 'POST',
         body: formData
@@ -290,9 +294,6 @@ function validateAndSubmit() {
         })
         .then(res => {
             console.log("Успех:", res);
-            tg.MainButton.hideProgress();
-            tg.MainButton.setText("ГОТОВО!");
-            setTimeout(() => tg.close(), 600);
         })
         .catch(error => {
             console.error("Ошибка отправки:", error);
