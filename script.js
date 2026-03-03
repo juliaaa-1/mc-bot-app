@@ -303,8 +303,11 @@ function validateAndSubmit() {
         .catch(error => {
             console.error("Ошибка отправки:", error);
             tg.MainButton.hideProgress();
-            tg.MainButton.setText("ОШИБКА!");
-            showError("КРИТИЧЕСКАЯ ОШИБКА ПРИ ОТПРАВКЕ:\n" + error.message + "\n\nПроверьте интернет или VPN. Если VPN включен, попробуйте выключить (или наоборот).");
+            tg.MainButton.setText("ОШИБКА СЕТИ");
+            showError("СЕТЕВАЯ ОШИБКА (Failed to fetch).\n\n" +
+                "Такое бывает из-за VPN. Пожалуйста, проверьте чат в Telegram:\n\n" +
+                "1. Если заявка УЖЕ ПРИШЛА — всё хорошо, можете закрыть форму.\n" +
+                "2. Если заявки нет — попробуйте выключить/включить VPN и отправить снова.");
         });
 }
 
